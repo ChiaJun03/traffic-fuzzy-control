@@ -24,25 +24,45 @@ class BackgroundController:
         self.horizontal_frequency_large = None
 
         self.spawn_rate = {
-            DoubleLane.Horizontal: {
-                'slow': True,
-                'medium': False,
+            Lane.left_to_right: {
+                'slow': False,
+                'medium': True,
                 'fast': False
             },
-            DoubleLane.Vertical: {
-                'slow': True,
-                'medium': False,
+            Lane.top_to_bottom: {
+                'slow': False,
+                'medium': True,
+                'fast': False
+            },
+            Lane.right_to_left: {
+                'slow': False,
+                'medium': True,
+                'fast': False
+            },
+            Lane.bottom_to_top: {
+                'slow': False,
+                'medium': True,
                 'fast': False
             }
         }
 
         self.spawn_rate_buttons = {
-            DoubleLane.Horizontal: {
+            Lane.left_to_right: {
                 'slow': None,
                 'medium': None,
                 'fast': None
             },
-            DoubleLane.Vertical: {
+            Lane.top_to_bottom: {
+                'slow': None,
+                'medium': None,
+                'fast': None
+            },
+            Lane.right_to_left: {
+                'slow': None,
+                'medium': None,
+                'fast': None
+            },
+            Lane.bottom_to_top: {
                 'slow': None,
                 'medium': None,
                 'fast': None
@@ -52,13 +72,13 @@ class BackgroundController:
         self.switch_traffic_button = None
         self.fuzzy_button = None
 
-    def set_spawn_rate(self, double_lane: DoubleLane, target_rate):
+    def set_spawn_rate(self, lane: Lane, target_rate):
         for rate in ['slow', 'medium', 'fast']:
-            self.spawn_rate[double_lane][rate] = (target_rate == rate)
+            self.spawn_rate[lane][rate] = (target_rate == rate)
 
-    def get_spawn_rate(self, double_lane: DoubleLane):
+    def get_spawn_rate(self,lane: Lane):
         for rate in ['slow', 'medium', 'fast']:
-            if self.spawn_rate[double_lane][rate]:
+            if self.spawn_rate[lane][rate]:
                 return rate
         raise Exception('None of slow, medium, fast is true!!!')
 
@@ -71,45 +91,83 @@ class BackgroundController:
         underline_font.set_underline(True)
 
         # Horizontal lanes controls
-        self.surface.blit(normal_font.render('Spawn Rate (Horizontal):', True, self.black), (5, 25))
+        self.surface.blit(normal_font.render('Spawn Rate (Left-to-Right):', True, self.black), (5, 25))
         fonts = [normal_font, normal_font, normal_font]
         colors = [self.black, self.black, self.black]
-        if self.spawn_rate[DoubleLane.Horizontal]['slow']:
+        if self.spawn_rate[Lane.left_to_right]['slow']:
             fonts[0] = underline_font
             colors[0] = self.red
-        if self.spawn_rate[DoubleLane.Horizontal]['medium']:
+        if self.spawn_rate[Lane.left_to_right]['medium']:
             fonts[1] = underline_font
             colors[1] = self.red
-        if self.spawn_rate[DoubleLane.Horizontal]['fast']:
+        if self.spawn_rate[Lane.left_to_right]['fast']:
             fonts[2] = underline_font
             colors[2] = self.red
-        self.spawn_rate_buttons[DoubleLane.Horizontal]['slow'] = self.surface.blit(fonts[0].render('Slow', True, colors[0]), (200, 25))
-        self.spawn_rate_buttons[DoubleLane.Horizontal]['medium'] = self.surface.blit(fonts[1].render('Medium', True, colors[1]), (240, 25))
-        self.spawn_rate_buttons[DoubleLane.Horizontal]['fast'] = self.surface.blit(fonts[2].render('Fast', True, colors[2]), (300, 25))
+        self.spawn_rate_buttons[Lane.left_to_right]['slow'] = self.surface.blit(fonts[0].render('Slow', True, colors[0]), (240, 25))
+        self.spawn_rate_buttons[Lane.left_to_right]['medium'] = self.surface.blit(fonts[1].render('Medium', True, colors[1]), (280, 25))
+        self.spawn_rate_buttons[Lane.left_to_right]['fast'] = self.surface.blit(fonts[2].render('Fast', True, colors[2]), (340, 25))
 
         # Vertical lanes controls
-        self.surface.blit(normal_font.render('Spawn Rate (Vertical):', True, self.black), (5, 45))
+        self.surface.blit(normal_font.render('Spawn Rate (Top-to-Bottom):', True, self.black), (5, 45))
         fonts = [normal_font, normal_font, normal_font]
         colors = [self.black, self.black, self.black]
-        if self.spawn_rate[DoubleLane.Vertical]['slow']:
+        if self.spawn_rate[Lane.top_to_bottom]['slow']:
             fonts[0] = underline_font
             colors[0] = self.red
-        if self.spawn_rate[DoubleLane.Vertical]['medium']:
+        if self.spawn_rate[Lane.top_to_bottom]['medium']:
             fonts[1] = underline_font
             colors[1] = self.red
-        if self.spawn_rate[DoubleLane.Vertical]['fast']:
+        if self.spawn_rate[Lane.top_to_bottom]['fast']:
             fonts[2] = underline_font
             colors[2] = self.red
-        self.spawn_rate_buttons[DoubleLane.Vertical]['slow'] = self.surface.blit(fonts[0].render('Slow', True, colors[0]), (200, 45))
-        self.spawn_rate_buttons[DoubleLane.Vertical]['medium'] = self.surface.blit(fonts[1].render('Medium', True, colors[1]), (240, 45))
-        self.spawn_rate_buttons[DoubleLane.Vertical]['fast'] = self.surface.blit(fonts[2].render('Fast', True, colors[2]), (300, 45))
+        self.spawn_rate_buttons[Lane.top_to_bottom]['slow'] = self.surface.blit(fonts[0].render('Slow', True, colors[0]), (240, 45))
+        self.spawn_rate_buttons[Lane.top_to_bottom]['medium'] = self.surface.blit(fonts[1].render('Medium', True, colors[1]), (280, 45))
+        self.spawn_rate_buttons[Lane.top_to_bottom]['fast'] = self.surface.blit(fonts[2].render('Fast', True, colors[2]), (340, 45))
+
+        # Vertical lanes controls
+        self.surface.blit(normal_font.render('Spawn Rate (Right-to-Left):', True, self.black), (5, 65))
+        fonts = [normal_font, normal_font, normal_font]
+        colors = [self.black, self.black, self.black]
+        if self.spawn_rate[Lane.right_to_left]['slow']:
+            fonts[0] = underline_font
+            colors[0] = self.red
+        if self.spawn_rate[Lane.right_to_left]['medium']:
+            fonts[1] = underline_font
+            colors[1] = self.red
+        if self.spawn_rate[Lane.right_to_left]['fast']:
+            fonts[2] = underline_font
+            colors[2] = self.red
+        self.spawn_rate_buttons[Lane.right_to_left]['slow'] = self.surface.blit(fonts[0].render('Slow', True, colors[0]), (240, 65))
+        self.spawn_rate_buttons[Lane.right_to_left]['medium'] = self.surface.blit(fonts[1].render('Medium', True, colors[1]), (280, 65))
+        self.spawn_rate_buttons[Lane.right_to_left]['fast'] = self.surface.blit(fonts[2].render('Fast', True, colors[2]), (340, 65))
+        
+        # Vertical lanes controls
+        self.surface.blit(normal_font.render('Spawn Rate (Bottom-to-Top):', True, self.black), (5, 85))
+        fonts = [normal_font, normal_font, normal_font]
+        colors = [self.black, self.black, self.black]
+        if self.spawn_rate[Lane.bottom_to_top]['slow']:
+            fonts[0] = underline_font
+            colors[0] = self.red
+        if self.spawn_rate[Lane.bottom_to_top]['medium']:
+            fonts[1] = underline_font
+            colors[1] = self.red
+        if self.spawn_rate[Lane.bottom_to_top]['fast']:
+            fonts[2] = underline_font
+            colors[2] = self.red
+        self.spawn_rate_buttons[Lane.bottom_to_top]['slow'] = self.surface.blit(fonts[0].render('Slow', True, colors[0]), (240, 85))
+        self.spawn_rate_buttons[Lane.bottom_to_top]['medium'] = self.surface.blit(fonts[1].render('Medium', True, colors[1]), (280, 85))
+        self.spawn_rate_buttons[Lane.bottom_to_top]['fast'] = self.surface.blit(fonts[2].render('Fast', True, colors[2]), (340, 85))
 
     def draw_moving_averages(self, moving_averages):
         normal_font = pygame.font.SysFont('Comic Sans MS', 16)
-        self.surface.blit(normal_font.render('Vehicles behind traffic light (Horizontal):', True, self.black), (5, 65))
-        self.surface.blit(normal_font.render('{0:.2f}'.format(moving_averages[Lane.left_to_right]), True, self.black), (320, 65))
-        self.surface.blit(normal_font.render('Vehicles behind traffic light (Vertical):', True, self.black), (5, 85))
-        self.surface.blit(normal_font.render('{0:.2f}'.format(moving_averages[Lane.top_to_bottom]), True, self.black), (320, 85))
+        self.surface.blit(normal_font.render('Vehicles behind traffic light (L2R):', True, self.black), (5, 105))
+        self.surface.blit(normal_font.render('{0:.2f}'.format(moving_averages[Lane.left_to_right]), True, self.black), (320, 105))
+        self.surface.blit(normal_font.render('Vehicles behind traffic light (T2B):', True, self.black), (5, 125))
+        self.surface.blit(normal_font.render('{0:.2f}'.format(moving_averages[Lane.top_to_bottom]), True, self.black), (320, 125))
+        self.surface.blit(normal_font.render('Vehicles behind traffic light (R2L):', True, self.black), (5, 145))
+        self.surface.blit(normal_font.render('{0:.2f}'.format(moving_averages[Lane.right_to_left]), True, self.black), (320, 145))
+        self.surface.blit(normal_font.render('Vehicles behind traffic light (B2T):', True, self.black), (5, 165))
+        self.surface.blit(normal_font.render('{0:.2f}'.format(moving_averages[Lane.bottom_to_top]), True, self.black), (320, 165))
 
     def draw_vehicle_count(self, total):
         font = pygame.font.SysFont('Comic Sans MS', 16)
@@ -188,25 +246,27 @@ class BackgroundController:
         pygame.draw.rect(self.surface, self.black, (x, y, w, h), 3)
         self.fuzzy_button = rect
 
-    def draw_fuzzy_score(self, fuzzy_score, current_lane: DoubleLane):
+    def draw_fuzzy_score(self, fuzzy_score, lane: Lane):
         normal_font = pygame.font.SysFont('Comic Sans MS', 16)
-        opposite_lane_name = 'Horizontal' if current_lane == DoubleLane.Vertical else 'Vertical'
-        self.surface.blit(normal_font.render('Fuzzy Green Light Ext. ({} Lane): '.format(opposite_lane_name), True, self.black), (5, 105))
+        #opposite_lane_name = 'Horizontal' if current_lane == DoubleLane.Vertical else 'Vertical'
+        self.surface.blit(normal_font.render('Fuzzy Green Light Ext. ({} Lane): '.format(lane.name), True, self.black), (5, 185))
 
         score = '-'
         if fuzzy_score:
             score = '{:.2f}s'.format(fuzzy_score)
-        self.surface.blit(normal_font.render(score, True, self.black), (320, 105))
+        self.surface.blit(normal_font.render(score, True, self.black), (320, 185))
 
-    def draw_extension_notification(self, extension, horizontal, vertical):
+    def draw_extension_notification(self, extension, current_lane, moving_averages):
         normal_font = pygame.font.SysFont('Comic Sans MS', 16)
+        active = moving_averages[current_lane.value-1]
+        passive = sum(moving_averages) - moving_averages[current_lane.value-1]
         
-        self.surface.blit(normal_font.render('Vehicle behind Traffic Light  ', True, Config['colors']['traffic_green']), (5, 125))
-        self.surface.blit(normal_font.render('     Horizontal : ', True, Config['colors']['traffic_green']), (5, 145))
-        self.surface.blit(normal_font.render('{:.1f}'.format(horizontal), True, Config['colors']['traffic_green']), (200, 145))
-        self.surface.blit(normal_font.render('     Vertical :', True, Config['colors']['traffic_green']), (5, 165))
-        self.surface.blit(normal_font.render('{:.1f}'.format(vertical), True, Config['colors']['traffic_green']), (200, 165))
-        self.surface.blit(normal_font.render('Green light is extended by {:.1f}!'.format(extension), True, Config['colors']['traffic_green']), (5, 185))
+        self.surface.blit(normal_font.render('Vehicle behind Traffic Light  ', True, Config['colors']['traffic_green']), (5, 205))
+        self.surface.blit(normal_font.render('     Active : ', True, Config['colors']['traffic_green']), (5, 225))
+        self.surface.blit(normal_font.render('{:.1f}'.format(active), True, Config['colors']['traffic_green']), (100, 225))
+        self.surface.blit(normal_font.render('     Passive :', True, Config['colors']['traffic_green']), (5, 245))
+        self.surface.blit(normal_font.render('{:.1f}'.format(passive), True, Config['colors']['traffic_green']), (100, 245))
+        self.surface.blit(normal_font.render('Green light is extended by {:.1f}!'.format(extension), True, Config['colors']['traffic_green']), (5, 265))
 
     def draw_light_durations(self, green_light_extension):
         normal_font = pygame.font.SysFont('Comic Sans MS', 16)

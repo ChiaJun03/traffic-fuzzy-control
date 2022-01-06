@@ -15,19 +15,19 @@ class Fuzzy:
         self.arriving_green_light_few = fuzz.trimf(self.x_arriving_green_light, setting['few'])
         self.arriving_green_light_small = fuzz.trimf(self.x_arriving_green_light, setting['small'])
         self.arriving_green_light_medium = fuzz.trimf(self.x_arriving_green_light, setting['medium'])
-        self.arriving_green_light_many = fuzz.trimf(self.x_arriving_green_light, setting['many'])
+        self.arriving_green_light_many = fuzz.trapmf(self.x_arriving_green_light, setting['many'])
 
         setting = Config['fuzzy']['membership_function']['behind_red_light']
         self.behind_red_light_few = fuzz.trimf(self.x_behind_red_light, setting['few'])
         self.behind_red_light_small = fuzz.trimf(self.x_behind_red_light, setting['small'])
         self.behind_red_light_medium = fuzz.trimf(self.x_behind_red_light, setting['medium'])
-        self.behind_red_light_many = fuzz.trimf(self.x_behind_red_light, setting['many'])
+        self.behind_red_light_many = fuzz.trapmf(self.x_behind_red_light, setting['many'])
 
         setting = Config['fuzzy']['membership_function']['extension']
         self.extension_zero = fuzz.trimf(self.x_extension, setting['zero'])
         self.extension_short = fuzz.trimf(self.x_extension, setting['short'])
         self.extension_medium = fuzz.trimf(self.x_extension, setting['medium'])
-        self.extension_long = fuzz.trimf(self.x_extension, setting['long'])
+        self.extension_long = fuzz.trapmf(self.x_extension, setting['long'])
 
     def get_extension(self, arriving_green_light_car, behind_red_light_car, extension_count):
         behind_red_light_level_few = fuzz.interp_membership(self.x_behind_red_light, self.behind_red_light_few, behind_red_light_car)
@@ -80,4 +80,4 @@ class Fuzzy:
                                                                 np.fmax(extension_activation_medium,
                                                                         extension_activation_long)))
 
-        return fuzz.defuzz(self.x_extension, aggregated, 'centroid')
+        return fuzz.defuzz(self.x_extension, aggregated, 'som')

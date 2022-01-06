@@ -21,8 +21,10 @@ class Simulator:
         self.clock = pygame.time.Clock()
         self.gap_between_switch = Config['simulator']['gap_between_traffic_switch']
 
-        self.HORIZONTAL_SPAWN_EVENT = pygame.USEREVENT + 1
-        self.VERTICAL_SPAWN_EVENT = pygame.USEREVENT + 2
+        self.L2R_SPAWN_EVENT = pygame.USEREVENT + 1
+        self.T2B_SPAWN_EVENT = pygame.USEREVENT + 2
+        self.R2L_SPAWN_EVENT = pygame.USEREVENT + 3
+        self.B2T_SPAWN_EVENT = pygame.USEREVENT + 4
 
         self.switching_traffic = False
         self.switching_traffic_start_time = None
@@ -33,13 +35,8 @@ class Simulator:
         self.green_light_remaining_time = Config['traffic_light']['green_light_duration']
         self.extension_notification_start_time = time.time() - 10
 
-    def spawn(self, double_lane: DoubleLane):
-        if double_lane == DoubleLane.Horizontal:
-            self.spawn_single_vehicle(Lane.left_to_right)
-            self.spawn_single_vehicle(Lane.right_to_left)
-        elif double_lane == DoubleLane.Vertical:
-            self.spawn_single_vehicle(Lane.bottom_to_top)
-            self.spawn_single_vehicle(Lane.top_to_bottom)
+    def spawn(self, lane: Lane):
+        self.spawn_single_vehicle(lane)
 
     def spawn_single_vehicle(self, lane: Lane):
         self.vehicle_ctrl.create_vehicle(lane, self.traffic_ctrl.traffic_lights[lane])
@@ -47,30 +44,42 @@ class Simulator:
     def main_loop(self):
         game_over = False
 
-        pygame.time.set_timer(self.HORIZONTAL_SPAWN_EVENT, Config['simulator']['spawn_rate']['slow'])
-        pygame.time.set_timer(self.VERTICAL_SPAWN_EVENT, Config['simulator']['spawn_rate']['slow'])
+        pygame.time.set_timer(self.L2R_SPAWN_EVENT, Config['simulator']['spawn_rate']['medium'])
+        pygame.time.set_timer(self.T2B_SPAWN_EVENT, Config['simulator']['spawn_rate']['medium'])
+        pygame.time.set_timer(self.R2L_SPAWN_EVENT, Config['simulator']['spawn_rate']['medium'])
+        pygame.time.set_timer(self.B2T_SPAWN_EVENT, Config['simulator']['spawn_rate']['medium'])
 
         while not game_over:
 
             for event in pygame.event.get():
-                if event.type == self.HORIZONTAL_SPAWN_EVENT:
-                    rate = self.background_ctrl.get_spawn_rate(DoubleLane.Horizontal)
-                    pygame.time.set_timer(self.HORIZONTAL_SPAWN_EVENT, Config['simulator']['spawn_rate'][rate])
-                    self.spawn(DoubleLane.Horizontal)
+                if event.type == self.L2R_SPAWN_EVENT:
+                    rate = self.background_ctrl.get_spawn_rate(Lane.left_to_right)
+                    pygame.time.set_timer(self.L2R_SPAWN_EVENT, Config['simulator']['spawn_rate'][rate])
+                    self.spawn(Lane.left_to_right)
 
-                if event.type == self.VERTICAL_SPAWN_EVENT:
-                    rate = self.background_ctrl.get_spawn_rate(DoubleLane.Vertical)
-                    pygame.time.set_timer(self.VERTICAL_SPAWN_EVENT, Config['simulator']['spawn_rate'][rate])
-                    self.spawn(DoubleLane.Vertical)
+                if event.type == self.T2B_SPAWN_EVENT:
+                    rate = self.background_ctrl.get_spawn_rate(Lane.top_to_bottom)
+                    pygame.time.set_timer(self.T2B_SPAWN_EVENT, Config['simulator']['spawn_rate'][rate])
+                    self.spawn(Lane.top_to_bottom)
+
+                if event.type == self.R2L_SPAWN_EVENT:
+                    rate = self.background_ctrl.get_spawn_rate(Lane.right_to_left)
+                    pygame.time.set_timer(self.R2L_SPAWN_EVENT, Config['simulator']['spawn_rate'][rate])
+                    self.spawn(Lane.right_to_left)
+
+                if event.type == self.B2T_SPAWN_EVENT:
+                    rate = self.background_ctrl.get_spawn_rate(Lane.bottom_to_top)
+                    pygame.time.set_timer(self.B2T_SPAWN_EVENT, Config['simulator']['spawn_rate'][rate])
+                    self.spawn(Lane.bottom_to_top)
 
                 if event.type == pygame.QUIT:
                     game_over = True
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    for double_lane in [DoubleLane.Horizontal, DoubleLane.Vertical]:
+                    for lane in [Lane.left_to_right, Lane.top_to_bottom, Lane.right_to_left, Lane.bottom_to_top]:
                         for rate in ['slow', 'medium', 'fast']:
-                            if self.background_ctrl.spawn_rate_buttons[double_lane][rate].collidepoint(event.pos):
-                                self.background_ctrl.set_spawn_rate(double_lane, rate)
+                            if self.background_ctrl.spawn_rate_buttons[lane][rate].collidepoint(event.pos):
+                                self.background_ctrl.set_spawn_rate(lane, rate)
                     # if self.background_ctrl.fuzzy_button.collidepoint(event.pos):
                     #     moving_averages = self.vehicle_ctrl.get_moving_averages_num_vehicles_behind_traffic()
                     #     print(self.calculate_fuzzy_score(moving_averages))
@@ -83,7 +92,7 @@ class Simulator:
 
             # print(self.traffic_ctrl.get_green_light_remaining())
 
-            self.traffic_ctrl.update_and_draw_traffic_lights()
+            direction_changed = self.traffic_ctrl.update_and_draw_traffic_lights()
             self.vehicle_ctrl.destroy_vehicles_outside_canvas()
             self.vehicle_ctrl.update_and_draw_vehicles()
             self.vehicle_ctrl.update_num_vehicles_behind_traffic()
@@ -92,27 +101,22 @@ class Simulator:
                 self.moving_averages = self.vehicle_ctrl.get_moving_averages_num_vehicles_behind_traffic()
             self.background_ctrl.draw_moving_averages(self.moving_averages)
 
-            current_green_light_remaining_time = self.traffic_ctrl.get_green_light_remaining()
-            direction_changed = current_green_light_remaining_time > self.green_light_remaining_time
-            self.green_light_remaining_time = current_green_light_remaining_time
-
-            if not self.is_extended:
-                if current_green_light_remaining_time <= Config['simulator']['seconds_before_extension']:
-                    fuzzy_score = self.calculate_fuzzy_score(self.moving_averages)
-                    self.horizontal = self.moving_averages[Lane.left_to_right]
-                    self.vertical = self.moving_averages[Lane.top_to_bottom]
-                    self.background_ctrl.draw_fuzzy_score(fuzzy_score, self.traffic_ctrl.get_current_active_lane())
-                    self.traffic_ctrl.set_green_light_extension(fuzzy_score)
-                    self.is_extended = True
-                    self.extension_notification_start_time = time.time()
-                    self.green_light_remaining_time = self.traffic_ctrl.get_green_light_remaining()
-            else:
-                if direction_changed:
-                    self.traffic_ctrl.clear_all_green_light_extension()
-                    self.is_extended = False
+            #current_green_light_remaining_time = self.traffic_ctrl.get_green_light_remaining()
+            #direction_changed = current_green_light_remaining_time > self.green_light_remaining_time
+            #self.green_light_remaining_time = current_green_light_remaining_time
+            if direction_changed:
+                self.traffic_ctrl.clear_all_green_light_extension()
+                fuzzy_score = self.calculate_fuzzy_score(self.moving_averages)
+                self.l2r = self.moving_averages[Lane.left_to_right]
+                self.t2b = self.moving_averages[Lane.top_to_bottom]
+                self.r2l = self.moving_averages[Lane.right_to_left]
+                self.b2t = self.moving_averages[Lane.bottom_to_top]
+                self.traffic_ctrl.set_green_light_extension(fuzzy_score)
+                self.extension_notification_start_time = time.time()
 
             if time.time() - self.extension_notification_start_time < Config['simulator']['fuzzy_notification_duration']:
-                self.background_ctrl.draw_extension_notification(self.traffic_ctrl.get_green_light_extension(), self.horizontal, self.vertical)
+                #self.background_ctrl.draw_fuzzy_score(fuzzy_score, self.traffic_ctrl.get_current_active_lane())
+                self.background_ctrl.draw_extension_notification(self.traffic_ctrl.get_green_light_extension(), self.traffic_ctrl.get_current_active_lane(), [self.l2r, self.t2b, self.r2l, self.b2t])
 
             pygame.display.update()
             self.clock.tick(Config['simulator']['frame_rate'])
@@ -122,16 +126,22 @@ class Simulator:
         if self.is_extended :
             ext_count = 1
         else:
-            ext_count =0
+            ext_count = 0
             
-        if traffic_state == DoubleLane.Vertical:
-            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.top_to_bottom], moving_averages[Lane.left_to_right], ext_count)
-        elif traffic_state == DoubleLane.Horizontal:
-            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.left_to_right], moving_averages[Lane.top_to_bottom], ext_count)
+        if traffic_state == Lane.left_to_right:
+            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.left_to_right], moving_averages[Lane.top_to_bottom]+moving_averages[Lane.right_to_left]+moving_averages[Lane.bottom_to_top], ext_count)
+        elif traffic_state == Lane.top_to_bottom:
+            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.top_to_bottom], moving_averages[Lane.left_to_right]+moving_averages[Lane.right_to_left]+moving_averages[Lane.bottom_to_top], ext_count)
+        elif traffic_state == Lane.right_to_left:
+            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.right_to_left], moving_averages[Lane.left_to_right]+moving_averages[Lane.top_to_bottom]+moving_averages[Lane.bottom_to_top], ext_count)
+        elif traffic_state == Lane.bottom_to_top:
+            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.bottom_to_top], moving_averages[Lane.left_to_right]+moving_averages[Lane.right_to_left]+moving_averages[Lane.top_to_bottom], ext_count)
 
     def initialize(self):
-        self.spawn(DoubleLane.Horizontal)
-        self.spawn(DoubleLane.Vertical)
+        self.spawn(Lane.left_to_right)
+        self.spawn(Lane.top_to_bottom)
+        self.spawn(Lane.right_to_left)
+        self.spawn(Lane.bottom_to_top)
         # self.toggle_traffic()
 
     def start(self):

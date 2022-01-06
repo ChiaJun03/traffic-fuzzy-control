@@ -2,8 +2,9 @@ import glob
 import pygame
 import random
 import numpy as np
+import copy
 
-from src.Common import Lane
+from src.Common import Direction, Lane
 from src.Config import Config
 from src.Entity.Vehicle import Vehicle
 from src.Entity.TrafficLight import TrafficLight
@@ -17,6 +18,7 @@ class VehicleController:
         self.vehicle_body_length = Config['vehicle']['body_length']
         self.bumper_distance = Config['simulator']['bumper_distance']
         self.safe_distance = Config['vehicle']['safe_distance']
+        self.road_marking_width = Config['background']['road_marking_width']
 
         self.surface = surface
         self.vehicles = {
@@ -41,6 +43,11 @@ class VehicleController:
         }
 
         self.counter = 0
+        x1 = self.screen_width / 2 - self.bumper_distance - self.vehicle_body_width / 2 - self.road_marking_width / 2
+        x2 = self.screen_width / 2 + self.bumper_distance + self.vehicle_body_width / 2 - self.road_marking_width / 2
+        y1 = self.screen_height / 2 - self.bumper_distance - self.vehicle_body_width / 2 - self.road_marking_width / 2
+        y2 = self.screen_height / 2 + self.bumper_distance + self.vehicle_body_width / 2 - self.road_marking_width / 2
+        self.turning_points = [[x1, y1], [x1, y2], [x2, y1], [x2, y2]]
 
     def last_vehicle(self, lane: Lane):
         if len(self.get_vehicles(lane)) > 0:
@@ -53,6 +60,15 @@ class VehicleController:
 
     def random_vehicle_image(self, lane: Lane):
         return random.choice(self.vehicle_images[lane])
+    
+    def random_vehicle_direction(self):
+        direction = random.randint(1, 3)
+        if direction == 1:
+            return Direction.forward
+        elif direction == 2:
+            return Direction.left
+        else:
+            return Direction.right
 
     def create_vehicle(self, lane: Lane, traffic_light: TrafficLight):
         if traffic_light.lane != lane:
@@ -63,35 +79,69 @@ class VehicleController:
         last_vehicle = self.last_vehicle(lane)
         too_close = False
         safe_spawn_factor = Config['vehicle']['safe_spawn_factor']
+        direction = self.random_vehicle_direction()
 
         if lane == Lane.left_to_right:
             x = 0
             y = self.screen_height / 2 - self.vehicle_body_width - self.bumper_distance
             if last_vehicle:
                 too_close = last_vehicle.x - self.safe_distance * safe_spawn_factor < x + self.vehicle_body_length
+            if direction == Direction.left:
+                turning_point = copy.deepcopy(self.turning_points[0])
+                turning_point.append(self.screen_width / 2 - self.vehicle_body_width - self.bumper_distance)
+            elif direction == Direction.right:
+                turning_point = copy.deepcopy(self.turning_points[2])
+                turning_point.append(self.screen_width / 2 + self.bumper_distance)
+            else:
+                turning_point = (0, 0)
 
         elif lane == Lane.right_to_left:
             x = self.screen_width - self.vehicle_body_length
             y = self.screen_height / 2 + self.bumper_distance
             if last_vehicle:
                 too_close = last_vehicle.x + self.vehicle_body_length + self.safe_distance * safe_spawn_factor > x
+            if direction == Direction.left:
+                turning_point = copy.deepcopy(self.turning_points[3])
+                turning_point.append(self.screen_width / 2 + self.bumper_distance)
+            elif direction == Direction.right:
+                turning_point = copy.deepcopy(self.turning_points[1])
+                turning_point.append(self.screen_width / 2 - self.vehicle_body_width - self.bumper_distance)
+            else:
+                turning_point = (0, 0)
 
         elif lane == Lane.top_to_bottom:
             x = self.screen_width / 2 + self.bumper_distance
             y = 0
             if last_vehicle:
                 too_close = last_vehicle.y - self.safe_distance * safe_spawn_factor < y + self.vehicle_body_length
+            if direction == Direction.left:
+                turning_point = copy.deepcopy(self.turning_points[2])
+                turning_point.append(self.screen_height / 2 - self.vehicle_body_width - self.bumper_distance)
+                turning_point.append(self.screen_height / 2 + self.bumper_distance)
+            elif direction == Direction.right:
+                turning_point = copy.deepcopy(self.turning_points[3])
+                turning_point.append(self.screen_height / 2 + self.bumper_distance)
+            else:
+                turning_point = (0, 0)
 
         elif lane == Lane.bottom_to_top:
             x = self.screen_width / 2 - self.vehicle_body_width - self.bumper_distance
             y = self.screen_height - self.vehicle_body_length
             if last_vehicle:
                 too_close = last_vehicle.y + self.vehicle_body_length + self.safe_distance * safe_spawn_factor > y
+            if direction == Direction.left:
+                turning_point = copy.deepcopy(self.turning_points[1])
+                turning_point.append(self.screen_height / 2 + self.bumper_distance)
+            elif direction == Direction.right:
+                turning_point = copy.deepcopy(self.turning_points[0])
+                turning_point.append(self.screen_height / 2 - self.vehicle_body_width - self.bumper_distance)
+            else:
+                turning_point = (0, 0)
 
         if too_close:
             return
 
-        new_vehicle = Vehicle(x, y, lane, image, surface, traffic_light)
+        new_vehicle = Vehicle(x, y, lane, image, surface, traffic_light, direction, turning_point)
         self.vehicles[lane].append(new_vehicle)
         self.counter += 1
 

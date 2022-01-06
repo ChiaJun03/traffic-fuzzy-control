@@ -2,7 +2,7 @@ import numpy as np
 
 Config = {
     'vehicle': {
-        'speed': 5,
+        'speed': 3,
         'safe_distance': 5,
         'body_length': 25,
         'body_width': 15,
@@ -13,12 +13,12 @@ Config = {
         'screen_height': 800,
         'bumper_distance': 5,
         'spawn_rate': {
-            'fast': 400,  # millisecond
-            'medium': 1500,  # millisecond
-            'slow': 3500,  # millisecond
+            'fast': 3000,  # millisecond
+            'medium': 14000,  # millisecond
+            'slow': 14000000,  # millisecond
         },
         'frame_rate': 30,
-        'gap_between_traffic_switch': 2,  # second
+        'gap_between_traffic_switch': 0,  # second
         'moving_averages_period': 1,  # second
         'static_duration': 1,  # second
         'seconds_before_extension': 1,  # second
@@ -38,7 +38,7 @@ Config = {
     'traffic_light': {
         'red_light_duration': 10,  # second
         'yellow_light_duration': 1.5,  # second
-        'green_light_duration': 10,  # second
+        'green_light_duration': 8.5,  # second
         'distance_from_center': (40, 10),
         'body_height': 30,
         'body_width': 20
@@ -51,28 +51,28 @@ Config = {
     },
     'fuzzy': {
         'range': {
-            'behind_red_light': np.arange(-4, 17, 1),
-            'arriving_green_light': np.arange(-4, 17, 1),
-            'extension': np.arange(0, 21, 1)
+            'behind_red_light': np.arange(0, 17, 1),
+            'arriving_green_light': np.arange(0, 17, 1),
+            'extension': np.arange(-9, 21, 1)
         },
         'membership_function': {
             'behind_red_light': {
                 'few': [0, 0, 3],
                 'small': [0, 3, 6],
                 'medium': [3, 6, 9],
-                'many': [6, 9, 12]
+                'many': [6, 9, 17, 17]
             },
             'arriving_green_light': {
                 'few': [0, 0, 3],
                 'small': [0, 3, 6],
                 'medium': [3, 6, 9],
-                'many': [6, 9, 12]
+                'many': [6, 9, 17, 17]
             },
             'extension': {
-                'zero': [0, 0, 0],
+                'zero': [-9, -9, 0],
                 'short': [0, 2, 4],
                 'medium': [2, 4, 6],
-                'long': [4, 6, 8]
+                'long': [4, 6, 21, 21]
             }
         }
     }
