@@ -57,19 +57,19 @@ Config = {
         },
         'membership_function': {
             'behind_red_light': {
-                'few': [0, 0, 0],
+                'few': [0, 0, 1],
                 'small': [0, 5, 10],
                 'medium': [5, 10, 15],
                 'many': [10, 15, 34, 34]
             },
             'arriving_green_light': {
-                'few': [0, 0, 0],
+                'few': [0, 0, 1],
                 'small': [0, 3, 6],
                 'medium': [3, 6, 9],
                 'many': [6, 9, 12, 12]
             },
             'extension': {
-                'zero': [-9, -9, -9],
+                'zero': [-9, -9, -8],
                 'short': [-9, -3, 3],
                 'medium': [-3, 3, 9],
                 'long': [3, 9, 9]

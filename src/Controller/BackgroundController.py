@@ -262,9 +262,9 @@ class BackgroundController:
         passive = sum(moving_averages) - moving_averages[current_lane.value-1]
         
         self.surface.blit(normal_font.render('Vehicle behind Traffic Light  ', True, Config['colors']['traffic_green']), (5, 205))
-        self.surface.blit(normal_font.render('     Active : ', True, Config['colors']['traffic_green']), (5, 225))
+        self.surface.blit(normal_font.render('     Arrival : ', True, Config['colors']['traffic_green']), (5, 225))
         self.surface.blit(normal_font.render('{:.1f}'.format(active), True, Config['colors']['traffic_green']), (100, 225))
-        self.surface.blit(normal_font.render('     Passive :', True, Config['colors']['traffic_green']), (5, 245))
+        self.surface.blit(normal_font.render('     Queue :', True, Config['colors']['traffic_green']), (5, 245))
         self.surface.blit(normal_font.render('{:.1f}'.format(passive), True, Config['colors']['traffic_green']), (100, 245))
         self.surface.blit(normal_font.render('Green light is extended by {:.1f}!'.format(extension), True, Config['colors']['traffic_green']), (5, 265))
 

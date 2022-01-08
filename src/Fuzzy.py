@@ -40,16 +40,7 @@ class Fuzzy:
         arriving_green_light_level_medium = fuzz.interp_membership(self.x_arriving_green_light, self.arriving_green_light_medium, arriving_green_light_car)
         arriving_green_light_level_many = fuzz.interp_membership(self.x_arriving_green_light, self.arriving_green_light_many, arriving_green_light_car)
 
-        # Rule 1: If Arrival is few then Extension is zero.
-        # Rule 2: If Arrival is small AND Queue is (few OR small) then Extension is short.
-        # Rule 3: If Arrival is small AND Queue is (medium OR many) then Extension is zero.
-        # Rule 4: If Arrival is medium AND Queue is (few OR small) then Extension is medium.
-        # Rule 5: If Arrival is medium AND Queue is (medium OR many) then Extension is short.
-        # Rule 6: If Arrival is many AND Queue is few then Extension is long.
-        # Rule 7: If Arrival is many AND Queue is (small OR medium) then Extension is medium.
-        # Rule 8: If Arrival is few AND Queue is many then Extension is short.
-        
-        ## New rules:
+        # Rules:
         # Rule 1: If Arrival is few then Extension is zero.
         # Rule 2: If Arrival is small then Extension is short.
         # Rule 3: If Arrival is medium AND Queuse is (few OR small) then Extension is long.
