@@ -27,6 +27,12 @@ class TrafficLight:
             TrafficStatus.yellow: time.time()
         }
         self.status = status
+        if lane == Lane.right_to_left:
+            self.factor = 2
+        elif lane == Lane.bottom_to_top:
+            self.factor = 3
+        else:
+            self.factor = 1
 
     @property
     def center_x(self):
@@ -34,7 +40,7 @@ class TrafficLight:
 
     @property
     def center_y(self):
-        return self.x + self.height / 2
+        return self.y + self.height / 2
 
     @property
     def width(self):
@@ -51,36 +57,40 @@ class TrafficLight:
         self.status = status
         self.start_time[self.status] = time.time()
 
-    def auto_update(self, opposite_status: TrafficStatus):
-        over_time = (self.duration[self.status] + self.duration_extension[self.status]) - \
+    def auto_update(self, green_lane: Lane):
+        over_time = (self.duration[self.status] * self.factor + self.duration_extension[self.status]) - \
                     (time.time() - self.start_time[self.status])
 
         to_change_status = over_time < 0
 
         new_status = None
 
-        if to_change_status:
+        if to_change_status: 
             if self.status == TrafficStatus.green:
                 self.status = TrafficStatus.yellow
                 new_status = TrafficStatus.yellow
+                self.factor = 1
             elif self.status == TrafficStatus.yellow:
                 self.status = TrafficStatus.red
                 new_status = TrafficStatus.red
+                self.factor = 3
             elif self.status == TrafficStatus.red:
                 # if opposite is red, do not update
-                if opposite_status == TrafficStatus.green:
+                if green_lane != self.lane:
                     return
                 if abs(over_time) < Config['simulator']['gap_between_traffic_switch']:
                     return
                 self.status = TrafficStatus.green
                 new_status = TrafficStatus.green
+                self.factor = 1
+                self.duration_extension[TrafficStatus.red] = 0
             self.start_time[self.status] = time.time()
 
         return new_status
 
     def draw_countdown(self):
         font = pygame.font.SysFont('Comic Sans MS', 12, True)
-        countdown = (self.duration[self.status] + self.duration_extension[self.status]) - (time.time() - self.start_time[self.status])
+        countdown = (self.duration[self.status] * self.factor + self.duration_extension[self.status]) - (time.time() - self.start_time[self.status])
         if countdown < 0: 
             countdown = 0.0
         text_color = Config['colors']['black']
@@ -106,5 +116,12 @@ class TrafficLight:
     def set_green_light_extension(self, extension):
         self.duration_extension[TrafficStatus.green] = extension
 
+    def set_red_light_extension(self, extension):
+        extension = -8.5 if extension < -8.5 else extension
+        if self.duration_extension[TrafficStatus.red] != 0:
+            self.duration_extension[TrafficStatus.red] += extension
+        else:
+            self.duration_extension[TrafficStatus.red] = extension
+
     def get_green_light_remaining_time(self):
-        return (self.duration[self.status] + self.duration_extension[self.status]) - (time.time() - self.start_time[self.status])
+        return (self.duration[self.status] * self.factor + self.duration_extension[self.status]) - (time.time() - self.start_time[self.status])

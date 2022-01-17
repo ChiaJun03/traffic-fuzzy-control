@@ -15,6 +15,8 @@ class TrafficController:
         self.traffic_light_body_height = Config['traffic_light']['body_height']
         self.traffic_light_body_width = Config['traffic_light']['body_width']
         self.traffic_light_distance_from_center = Config['traffic_light']['distance_from_center']
+        self.lanes = [Lane.left_to_right, Lane.top_to_bottom, Lane.right_to_left, Lane.bottom_to_top]
+        self.green_lane = 0
 
         self.traffic_lights = {}
 
@@ -72,15 +74,21 @@ class TrafficController:
         }
         self.traffic_lights[lane] = TrafficLight(x, y, lane, traffic_light_images, self.surface)
 
-        if lane in [Lane.bottom_to_top, Lane.top_to_bottom]:
+        if lane in [Lane.bottom_to_top, Lane.top_to_bottom, Lane.right_to_left]:
             self.traffic_lights[lane].change_status(TrafficStatus.red)
 
     def update_and_draw_traffic_lights(self):
+        direction_changed = False
         for lane, traffic_light in self.traffic_lights.items():
-            opposite_status = self.get_opposite_status(lane)
-            traffic_light.auto_update(opposite_status)
+            #opposite_status = self.get_opposite_status(lane)
+            new_status = traffic_light.auto_update(self.lanes[self.green_lane])
             traffic_light.draw()
             traffic_light.draw_countdown()
+            if lane == self.lanes[self.green_lane] and new_status == TrafficStatus.red:
+                self.green_lane += 1
+                self.green_lane = 0 if self.green_lane == 4 else self.green_lane
+                direction_changed = True
+        return direction_changed
 
     def get_opposite_status(self, lane: Lane):
         if lane == Lane.right_to_left or \
@@ -93,21 +101,23 @@ class TrafficController:
         return self.fuzzy.get_extension(arriving_green_light_car, behind_red_light_car, extension_count)
 
     def get_current_active_lane(self)->DoubleLane:
-        if self.traffic_lights[Lane.left_to_right].status == TrafficStatus.green:
-            return DoubleLane.Horizontal
-        elif self.traffic_lights[Lane.top_to_bottom].status == TrafficStatus.green:
-            return DoubleLane.Vertical
-        return None
+        return self.lanes[self.green_lane]
 
     def get_green_light_extension(self):
         current_lane = self.get_current_active_lane()
         if not current_lane:
             return self.latest_green_light_extension if self.latest_green_light_extension else 0
-        if current_lane == DoubleLane.Vertical:
-            self.latest_green_light_extension = self.traffic_lights[Lane.bottom_to_top].duration_extension[
-                TrafficStatus.green]
-        elif current_lane == DoubleLane.Horizontal:
+        if current_lane == Lane.left_to_right:
             self.latest_green_light_extension = self.traffic_lights[Lane.left_to_right].duration_extension[
+                TrafficStatus.green]
+        elif current_lane == Lane.top_to_bottom:
+            self.latest_green_light_extension = self.traffic_lights[Lane.top_to_bottom].duration_extension[
+                TrafficStatus.green]
+        elif current_lane == Lane.right_to_left:
+            self.latest_green_light_extension = self.traffic_lights[Lane.right_to_left].duration_extension[
+                TrafficStatus.green]
+        elif current_lane == Lane.bottom_to_top:
+            self.latest_green_light_extension = self.traffic_lights[Lane.bottom_to_top].duration_extension[
                 TrafficStatus.green]
         return self.latest_green_light_extension
 
@@ -115,8 +125,12 @@ class TrafficController:
         current_lane = self.get_current_active_lane()
         if not current_lane:
             return
-        for tf in self.get_traffic_lights(current_lane):
-            tf.set_green_light_extension(extension)
+        for lane, traffic_light in self.traffic_lights.items():
+            if lane == current_lane:
+                traffic_light.set_green_light_extension(extension)
+            else:
+                traffic_light.set_red_light_extension(extension)
+
 
     def clear_all_green_light_extension(self):
         for lane, tf in self.traffic_lights.items():
@@ -125,10 +139,14 @@ class TrafficController:
     def get_green_light_remaining(self):
         current_lane = self.get_current_active_lane()
         remaining_seconds = 0
-        if current_lane == DoubleLane.Vertical:
-            remaining_seconds = self.traffic_lights[Lane.bottom_to_top].get_green_light_remaining_time()
-        elif current_lane == DoubleLane.Horizontal:
+        if current_lane == Lane.left_to_right:
             remaining_seconds = self.traffic_lights[Lane.left_to_right].get_green_light_remaining_time()
+        elif current_lane == Lane.top_to_bottom:
+            remaining_seconds = self.traffic_lights[Lane.top_to_bottom].get_green_light_remaining_time()
+        elif current_lane == Lane.right_to_left:
+            remaining_seconds = self.traffic_lights[Lane.right_to_left].get_green_light_remaining_time()
+        elif current_lane == Lane.bottom_to_top:
+            remaining_seconds = self.traffic_lights[Lane.bottom_to_top].get_green_light_remaining_time()
         return remaining_seconds
 
     def in_transition(self)->bool:
