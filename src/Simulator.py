@@ -6,6 +6,7 @@ from src.Config import Config
 from src.Controller.VehicleController import VehicleController
 from src.Controller.TrafficController import TrafficController
 from src.Controller.BackgroundController import BackgroundController
+from src.Wang_Mendel import Mangami, predict
 
 
 class Simulator:
@@ -34,6 +35,7 @@ class Simulator:
         self.is_extended = False
         self.green_light_remaining_time = Config['traffic_light']['green_light_duration']
         self.extension_notification_start_time = time.time() - 10
+        Mangami(True)
 
     def spawn(self, lane: Lane):
         self.spawn_single_vehicle(lane)
@@ -80,17 +82,12 @@ class Simulator:
                         for rate in ['slow', 'medium', 'fast']:
                             if self.background_ctrl.spawn_rate_buttons[lane][rate].collidepoint(event.pos):
                                 self.background_ctrl.set_spawn_rate(lane, rate)
-                    # if self.background_ctrl.fuzzy_button.collidepoint(event.pos):
-                    #     moving_averages = self.vehicle_ctrl.get_moving_averages_num_vehicles_behind_traffic()
-                    #     print(self.calculate_fuzzy_score(moving_averages))
 
             self.background_ctrl.refresh_screen()
             self.background_ctrl.draw_road_markings()
             self.background_ctrl.draw_vehicle_count(self.vehicle_ctrl.counter)
             self.background_ctrl.draw_spawn_rate_buttons()
             self.background_ctrl.draw_light_durations(self.traffic_ctrl.get_green_light_extension())
-
-            # print(self.traffic_ctrl.get_green_light_remaining())
 
             direction_changed = self.traffic_ctrl.update_and_draw_traffic_lights()
             self.vehicle_ctrl.destroy_vehicles_outside_canvas()
@@ -101,9 +98,6 @@ class Simulator:
                 self.moving_averages = self.vehicle_ctrl.get_moving_averages_num_vehicles_behind_traffic()
             self.background_ctrl.draw_moving_averages(self.moving_averages)
 
-            #current_green_light_remaining_time = self.traffic_ctrl.get_green_light_remaining()
-            #direction_changed = current_green_light_remaining_time > self.green_light_remaining_time
-            #self.green_light_remaining_time = current_green_light_remaining_time
             if direction_changed:
                 self.traffic_ctrl.clear_all_green_light_extension()
                 fuzzy_score = self.calculate_fuzzy_score(self.moving_averages)
@@ -115,7 +109,6 @@ class Simulator:
                 self.extension_notification_start_time = time.time()
 
             if time.time() - self.extension_notification_start_time < Config['simulator']['fuzzy_notification_duration']:
-                #self.background_ctrl.draw_fuzzy_score(fuzzy_score, self.traffic_ctrl.get_current_active_lane())
                 self.background_ctrl.draw_extension_notification(self.traffic_ctrl.get_green_light_extension(), self.traffic_ctrl.get_current_active_lane(), [self.l2r, self.t2b, self.r2l, self.b2t])
 
             pygame.display.update()
@@ -123,26 +116,21 @@ class Simulator:
 
     def calculate_fuzzy_score(self, moving_averages):
         traffic_state = self.traffic_ctrl.get_current_active_lane()
-        if self.is_extended :
-            ext_count = 1
-        else:
-            ext_count = 0
             
         if traffic_state == Lane.left_to_right:
-            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.left_to_right], moving_averages[Lane.top_to_bottom]+moving_averages[Lane.right_to_left]+moving_averages[Lane.bottom_to_top], ext_count)
+            return predict([[moving_averages[Lane.left_to_right]], [moving_averages[Lane.top_to_bottom]+moving_averages[Lane.right_to_left]+moving_averages[Lane.bottom_to_top]]])
         elif traffic_state == Lane.top_to_bottom:
-            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.top_to_bottom], moving_averages[Lane.left_to_right]+moving_averages[Lane.right_to_left]+moving_averages[Lane.bottom_to_top], ext_count)
+            return predict([[moving_averages[Lane.top_to_bottom]], [moving_averages[Lane.left_to_right]+moving_averages[Lane.right_to_left]+moving_averages[Lane.bottom_to_top]]])
         elif traffic_state == Lane.right_to_left:
-            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.right_to_left], moving_averages[Lane.left_to_right]+moving_averages[Lane.top_to_bottom]+moving_averages[Lane.bottom_to_top], ext_count)
+            return predict([[moving_averages[Lane.right_to_left]], [moving_averages[Lane.left_to_right]+moving_averages[Lane.top_to_bottom]+moving_averages[Lane.bottom_to_top]]])
         elif traffic_state == Lane.bottom_to_top:
-            return self.traffic_ctrl.calculate_fuzzy_score(moving_averages[Lane.bottom_to_top], moving_averages[Lane.left_to_right]+moving_averages[Lane.right_to_left]+moving_averages[Lane.top_to_bottom], ext_count)
+            return predict([[moving_averages[Lane.bottom_to_top]], [moving_averages[Lane.left_to_right]+moving_averages[Lane.right_to_left]+moving_averages[Lane.top_to_bottom]]])
 
     def initialize(self):
         self.spawn(Lane.left_to_right)
         self.spawn(Lane.top_to_bottom)
         self.spawn(Lane.right_to_left)
         self.spawn(Lane.bottom_to_top)
-        # self.toggle_traffic()
 
     def start(self):
         pygame.init()

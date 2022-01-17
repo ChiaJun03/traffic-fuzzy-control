@@ -3,3 +3,4 @@ pygame==1.9.4
 scikit-fuzzy
 scipy==1.1.0
 matplotlib
+pandas

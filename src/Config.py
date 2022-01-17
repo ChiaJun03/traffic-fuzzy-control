@@ -51,28 +51,28 @@ Config = {
     },
     'fuzzy': {
         'range': {
-            'behind_red_light': np.arange(0, 35, 1),
+            'behind_red_light': np.arange(0, 34.1, 0.1),
             'arriving_green_light': np.arange(0, 13, 1),
-            'extension': np.arange(-9, 10, 1)
+            'extension': np.arange(-8.5, 8.5, 0.5)
         },
         'membership_function': {
             'behind_red_light': {
-                'few': [0, 0, 1],
-                'small': [0, 5, 10],
-                'medium': [5, 10, 15],
-                'many': [10, 15, 34, 34]
+                'few': [0, 0, 11.33],
+                'small': [0, 11.33, 22.67],
+                'medium': [11.33, 22.67, 34],
+                'many': [22.67, 34, 34]
             },
             'arriving_green_light': {
-                'few': [0, 0, 1],
-                'small': [0, 3, 6],
-                'medium': [3, 6, 9],
-                'many': [6, 9, 12, 12]
+                'few': [0, 0, 4],
+                'small': [0, 4, 8],
+                'medium': [4, 8, 12],
+                'many': [8, 12, 12]
             },
             'extension': {
-                'zero': [-9, -9, -8],
-                'short': [-9, -3, 3],
-                'medium': [-3, 3, 9],
-                'long': [3, 9, 9]
+                'zero': [-8.5, -8.5, -3],
+                'short': [-8.5, -3, 2.5],
+                'medium': [-3, 2.5, 8],
+                'long': [2.5, 8, 8]
             }
         }
     }
