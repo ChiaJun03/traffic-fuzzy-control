@@ -15,4 +15,4 @@ Run the main script using the environment intepreter
 `python main.py`
 
 # Current Progress
-![Screenshot](https://github.com/woo-chia-wei/traffic-fuzzy-control/blob/master/images/recording/01.gif)
+![Screenshot](https://github.com/ChiaJun03/traffic-fuzzy-control/blob/fuzzy_assignment/images/recording/demo.gif)
